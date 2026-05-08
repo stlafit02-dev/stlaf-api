@@ -1,30 +1,42 @@
 <?php
+// 1. CORS Headers
 header("Access-Control-Allow-Origin: *");  
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS"); 
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+header("Content-Type: application/json"); // Siguraduhin na JSON lagi ang output
 
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    exit; // Agad na tapusin ang request para sa preflight checks
+    exit; 
 }
 
-// 3. Database Credentials
-$host = "localhost";
-$user = "root";
-$pass = "";
-$dbname = "stlaf_db"; 
+// 2. Database Credentials (Clever Cloud)
+$host   = 'bchbyrvggka3okcjwmwv-mysql.services.clever-cloud.com';
+$dbname = 'bchbyrvggka3okcjwmwv';
+$dbuser = 'usdkgqrlhm5iiwtk';
+$dbpass = 'dKzvf9Ns0GxUH041q5Hd';
 
-// 4. Establishment of Connection (Object-Oriented style)
-$conn = new mysqli($host, $user, $pass, $dbname);
+// 3. Establishment of Connection (MySQLi style - para sa get_leaves.php, etc.)
+// FIX: Ginagamit na nito ang tamang variables ($dbuser at $dbpass)
+$conn = new mysqli($host, $dbuser, $dbpass, $dbname);
 
-// 5. Check Connection
+// 4. Check MySQLi Connection
 if ($conn->connect_error) {
-    // I-output natin ang error sa JSON format para mabasa ng React frontend mo
-    die(json_encode([
+    echo json_encode([
         "success" => false, 
         "message" => "Database Connection Failed: " . $conn->connect_error
-    ]));
+    ]);
+    exit;
 }
 
-// 6. Set Charset para iwas sa mga weird characters sa UI
-$conn->set_charset("utf8mb4");
+if ($conn) {
+    $conn->set_charset("utf8mb4");
+}
+
+// 5. Establishment of Connection (PDO style - para sa login.php)
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $dbuser, $dbpass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    // Hindi na natin kailangan mag-exit dito kung gumana na ang mysqli sa itaas
+}
 ?>

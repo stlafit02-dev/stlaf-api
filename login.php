@@ -30,26 +30,26 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $input = file_get_contents('php://input');
-$data  = json_decode($input, true);
+$data = json_decode(file_get_contents("php://input"), true);
 
 if (!$data) {
     echo json_encode(['success' => false, 'message' => 'Invalid request body']);
     exit();
 }
 
-$username = trim($data['username'] ?? '');
+$username = $data['username'];
 $password = $data['password'] ?? '';
-$role     = trim($data['role'] ?? '');
+$role = $data['role'];
 
 if (!$username || !$password || !$role) {
     echo json_encode(['success' => false, 'message' => 'All fields are required.']);
     exit();
 }
 
-$host   = 'localhost';
-$dbname = 'stlaf_db';
-$dbuser = 'root';
-$dbpass = '';
+$host   = 'bchbyrvggka3okcjwmwv-mysql.services.clever-cloud.com';
+$dbname = 'bchbyrvggka3okcjwmwv';
+$dbuser = 'usdkgqrlhm5iiwtk';
+$dbpass = 'dKzvf9Ns0GxUH041q5Hd';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $dbuser, $dbpass);

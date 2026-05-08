@@ -2,10 +2,10 @@
 include 'cors.php';
 include 'db_config.php';
 
-$host = "localhost";
-$username = "root";
-$password = "";
-$dbname = "stlaf_db"; 
+$host   = 'bchbyrvggka3okcjwmwv-mysql.services.clever-cloud.com';
+$dbname = 'bchbyrvggka3okcjwmwv';
+$dbuser = 'usdkgqrlhm5iiwtk';
+$dbpass = 'dKzvf9Ns0GxUH041q5Hd';
 
 $conn = new mysqli($host, $username, $password, $dbname);
 
