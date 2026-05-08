@@ -11,12 +11,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// ✅ DB CONFIG (hardcoded as you have it)
-$host = 'localhost';
-$db_name = 'stlaf_db';
-$username = 'root';
-$password = '';
-
+$host   = 'bchbyrvggka3okcjwmwv-mysql.services.clever-cloud.com';
+$dbname = 'bchbyrvggka3okcjwmwv';
+$dbuser = 'usdkgqrlhm5iiwtk';
+$dbpass = 'dKzvf9Ns0GxUH041q5Hd';
 // ✅ Safe DB connection
 try {
     $conn = new PDO("mysql:host={$host};dbname={$db_name};charset=utf8mb4", $username, $password);
