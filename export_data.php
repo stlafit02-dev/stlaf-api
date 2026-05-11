@@ -1,4 +1,6 @@
 <?php
+include 'cors.php';
+include 'db_config.php';
 // ✅ Suppress HTML errors so JSON stays clean
 error_reporting(0);
 ini_set('display_errors', 0);
