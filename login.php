@@ -5,14 +5,6 @@
  * date: June 25, 2026
  * purpose: Validates employee credentials and issues sessions/access context configurations based on organizational roles.
  */
-
-// 1. Force explicit JSON headers instantly
-header("Content-Type: application/json; charset=UTF-8");
-
-// 2. Safely capture the incoming Origin domain
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-$cleanOrigin = rtrim($origin, '/');
-
 $allowedOrigins = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
@@ -20,26 +12,25 @@ $allowedOrigins = [
     'http://192.168.137.1:5173',
 ];
 
-// 3. CRITICAL CORS FIX: Never fallback to '*' when credentials are required.
-// Always mirror the valid origin back, or echo your primary local origin as a safe fallback.
-if (in_array($cleanOrigin, $allowedOrigins, true)) {
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+if (in_array($origin, $allowedOrigins, true)) {
     header("Access-Control-Allow-Origin: " . $origin);
+    header("Access-Control-Allow-Credentials: true");
 } else {
-    header("Access-Control-Allow-Origin: http://localhost:5173"); 
+    header("Access-Control-Allow-Origin: *");
 }
 
-header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+header("Content-Type: application/json");
 
-// Handle CORS Preflight checks immediately
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
     echo json_encode([
         'success' => false,
         'message' => 'Method not allowed'
@@ -72,7 +63,6 @@ $rawInput = file_get_contents('php://input');
 $data = json_decode($rawInput, true);
 
 if (!is_array($data)) {
-    http_response_code(400);
     echo json_encode([
         'success' => false,
         'message' => 'Invalid request body'
@@ -96,6 +86,8 @@ if ($role === '' || $password === '') {
 }
 
 if ($role === 'approver') {
+    // Approver can send department directly,
+    // or frontend may still use "username" field for department dropdown
     if ($department === '' && $username === '') {
         echo json_encode([
             'success' => false,
@@ -144,6 +136,7 @@ $user = null;
 
 // ==========================================
 // EMPLOYEE LOGIN
+// username = id_number
 // ==========================================
 if ($role === 'employee') {
     $stmt = $pdo->prepare("
@@ -174,6 +167,8 @@ if ($role === 'employee') {
 
 // ==========================================
 // APPROVER LOGIN
+// login = department + password
+// supports many approvers in one department
 // ==========================================
 elseif ($role === 'approver') {
     $loginDepartment = trim($department !== '' ? $department : $username);
@@ -215,6 +210,7 @@ elseif ($role === 'approver') {
 
 // ==========================================
 // SUPERADMIN LOGIN
+// username = username
 // ==========================================
 elseif ($role === 'superadmin') {
     $stmt = $pdo->prepare("
@@ -234,30 +230,44 @@ elseif ($role === 'superadmin') {
         exit();
     }
 
-    if (!verifyUserPassword($password, $user['password'] ?? '')) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Invalid password.'
-        ]);
-        exit();
+// ==========================================
+// VERIFY PASSWORD
+// Supports hashed and plain text passwords
+// ==========================================
+$dbPassword = $user['password'] ?? '';
+$isPasswordValid = false;
+
+if ($dbPassword !== '') {
+    // If hashed password
+    if (password_get_info($dbPassword)['algo']) {
+        $isPasswordValid = password_verify($password, $dbPassword);
     }
+    // If plain text password
+    else {
+        $isPasswordValid = hash_equals($dbPassword, $password);
+    }
+}
+
+if (!$isPasswordValid) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid password.'
+    ]);
+    exit();
 }
 
 // ==========================================
 // SUCCESS RESPONSE
 // ==========================================
-if ($user) {
-    echo json_encode([
-        'success' => true,
-        'message' => 'Login successful.',
-        'user' => [
-            'id_number'  => $user['id_number'] ?? '',
-            'username'   => $user['username'] ?? '',
-            'name'       => $user['name'] ?? '',
-            'role'       => $user['role'] ?? '',
-            'department' => $user['department'] ?? '',
-            'position'   => $user['position'] ?? ''
-        ]
-    ]);
-    exit();
-}
+echo json_encode([
+    'success' => true,
+    'message' => 'Login successful.',
+    'user' => [
+        'id_number'  => $user['id_number'] ?? '',
+        'username'   => $user['username'] ?? '',
+        'name'       => $user['name'] ?? '',
+        'role'       => $user['role'] ?? '',
+        'department' => $user['department'] ?? '',
+        'position'   => $user['position'] ?? ''
+    ]
+]);
