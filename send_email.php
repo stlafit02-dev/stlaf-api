@@ -1,43 +1,45 @@
 <?php
 
-require 'vendor/autoload.php';
+$apiKey = getenv('BREVO_API_KEY');
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+$data = [
+    "sender" => [
+        "name" => getenv("BREVO_FROM_NAME"),
+        "email" => getenv("BREVO_FROM_EMAIL")
+    ],
+    "to" => [
+        [
+            "email" => "stlaf.it02@gmail.com",
+            "name" => "Approver"
+        ]
+    ],
+    "subject" => "Brevo API Test",
+    "htmlContent" => "
+        <h2>Congratulations!</h2>
+        <p>Your Brevo Email API is working.</p>
+    "
+];
 
-$mail = new PHPMailer(true);
+$ch = curl_init();
 
-try {
+curl_setopt_array($ch, [
+    CURLOPT_URL => "https://api.brevo.com/v3/smtp/email",
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => [
+        "accept: application/json",
+        "api-key: $apiKey",
+        "content-type: application/json"
+    ],
+    CURLOPT_POSTFIELDS => json_encode($data)
+]);
 
-    $mail->isSMTP();
+$response = curl_exec($ch);
 
-    $mail->Host = 'smtp.gmail.com';
-
-    $mail->SMTPAuth = true;
-
-    $mail->Username = 'stlaf.itdept@gmail.com';
-
-    $mail->Password = 'ptvd upua zsep nrhi';
-
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-
-    $mail->Port = 587;
-
-    $mail->setFrom('stlaf.itdept@gmail.com', 'STLAF Leave System');
-
-    $mail->addAddress('stlaf.it02@gmail.com');
-
-    $mail->isHTML(true);
-
-    $mail->Subject = 'PHPMailer Test';
-
-    $mail->Body = '<h2>Email is working!</h2><p>Your PHP backend can now send emails.</p>';
-
-    $mail->send();
-
-    echo "Email sent successfully.";
-
-} catch (Exception $e) {
-
-    echo "Email failed: {$mail->ErrorInfo}";
+if (curl_errno($ch)) {
+    echo curl_error($ch);
+} else {
+    echo $response;
 }
+
+curl_close($ch);
