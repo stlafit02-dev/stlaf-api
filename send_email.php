@@ -25,7 +25,7 @@ try {
 
     $mail->setFrom('stlaf.itdept@gmail.com', 'STLAF Leave System');
 
-    $mail->addAddress('stlaf.it02@email.com');
+    $mail->addAddress('stlaf.it02@gmail.com');
 
     $mail->isHTML(true);
 
