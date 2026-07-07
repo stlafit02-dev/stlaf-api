@@ -9,7 +9,7 @@ $data = [
     ],
     "to" => [
         [
-            "email" => "stlaf.it02@gmail.com",
+            "email" => "stlaf.itdept@gmail.com",
             "name" => "Approver"
         ]
     ],
