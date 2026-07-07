@@ -52,8 +52,51 @@ if (!$stmt) {
 $stmt->bind_param("sssss", $employeeId, $purpose, $date, $timeIn, $timeOut);
 
 if ($stmt->execute()) {
-  echo json_encode(["success" => true, "message" => "OB / Field request submitted!"]);
+
+    // Get employee details
+    $userStmt = $conn->prepare("
+        SELECT name, department
+        FROM users
+        WHERE id_number = ?
+        LIMIT 1
+    ");
+
+    $userStmt->bind_param("s", $employeeId);
+    $userStmt->execute();
+
+    $user = $userStmt->get_result()->fetch_assoc();
+
+    if ($user) {
+
+        require_once "send_email.php";
+
+        sendRequestNotification(
+            $conn,
+            $user["department"],
+            "New Official Business Request",
+            [
+                "Employee" => $user["name"],
+                "Department" => $user["department"],
+                "Purpose" => $purpose,
+                "Date" => $date,
+                "Time" => "$timeIn - $timeOut",
+                "Status" => "Recorded"
+            ]
+        );
+    }
+
+    echo json_encode([
+        "success" => true,
+        "message" => "OB / Field request submitted!"
+    ]);
+
 } else {
-  echo json_encode(["success" => false, "message" => "Execute failed", "mysql_error" => $stmt->error]);
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Execute failed",
+        "mysql_error" => $stmt->error
+    ]);
+
 }
 ?>

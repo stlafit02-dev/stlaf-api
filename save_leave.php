@@ -84,10 +84,38 @@ if ($isTimeBased) {
 }
 
 if ($stmt->execute()) {
-    echo json_encode(["success" => true, "message" => "Leave request submitted successfully!"]);
+
+    require_once "send_email.php";
+
+    sendRequestNotification(
+        $conn,
+        $dept,
+        "New Leave Request",
+        [
+            "Employee" => $empName,
+            "Department" => $dept,
+            "Leave Type" => $lType,
+            "Start Date" => $sDate,
+            "End Date" => $eDate,
+            "Reason" => $reason,
+            "Status" => "Pending"
+        ]
+    );
+
+    echo json_encode([
+        "success" => true,
+        "message" => "Leave request submitted successfully!"
+    ]);
+
 } else {
+
     error_log("❌ DB ERROR: " . $conn->error);
-    echo json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Database error: " . $conn->error
+    ]);
+
 }
 
 $stmt->close();

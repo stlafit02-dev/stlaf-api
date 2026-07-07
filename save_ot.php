@@ -50,8 +50,38 @@ if (!$stmt) {
 $stmt->bind_param("ssssds", $empId, $empName, $dept, $otDate, $hours, $reason);
 
 if ($stmt->execute()) {
-    echo json_encode(["success" => true, "message" => "Overtime request submitted!"]);
+
+    require_once "send_email.php";
+
+    sendRequestNotification(
+        $conn,
+        $dept,
+        "New Overtime Request",
+        [
+            "Employee" => $empName,
+            "Department" => $dept,
+            "OT Date" => $otDate,
+            "Hours" => $hours,
+            "Reason" => $reason,
+            "Status" => "Pending"
+        ]
+    );
+
+    echo json_encode([
+        "success" => true,
+        "message" => "Overtime request submitted!"
+    ]);
+
 } else {
-    echo json_encode(["success" => false, "message" => "Execute failed", "mysql_error" => $stmt->error]);
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Execute failed",
+        "mysql_error" => $stmt->error
+    ]);
+
 }
+
+$stmt->close();
+$conn->close();
 ?>
