@@ -211,12 +211,14 @@ elseif ($role === 'approver') {
 // username = username
 // ==========================================
 elseif ($role === 'superadmin') {
+
     $stmt = $pdo->prepare("
         SELECT * FROM users
         WHERE TRIM(username) = TRIM(?)
         AND LOWER(TRIM(role)) = 'superadmin'
         LIMIT 1
     ");
+
     $stmt->execute([$username]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -228,34 +230,17 @@ elseif ($role === 'superadmin') {
         exit();
     }
 
-// ==========================================
-// VERIFY PASSWORD
-// Supports hashed and plain text passwords
-// ==========================================
-$dbPassword = $user['password'] ?? '';
-$isPasswordValid = false;
-
-if ($dbPassword !== '') {
-    // If hashed password
-    if (password_get_info($dbPassword)['algo']) {
-        $isPasswordValid = password_verify($password, $dbPassword);
-    }
-    // If plain text password
-    else {
-        $isPasswordValid = hash_equals($dbPassword, $password);
+    if (!verifyUserPassword($password, $user['password'] ?? '')) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid password.'
+        ]);
+        exit();
     }
 }
 
-if (!$isPasswordValid) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Invalid password.'
-    ]);
-    exit();
-}
-
 // ==========================================
-// SUCCESS RESPONSE
+// SUCCESS RESPONSE (ALL ROLES)
 // ==========================================
 echo json_encode([
     'success' => true,
@@ -269,4 +254,5 @@ echo json_encode([
         'position'   => $user['position'] ?? ''
     ]
 ]);
-}
+
+exit();
