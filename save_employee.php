@@ -151,7 +151,16 @@ try {
   exit;
 
 } catch (Throwable $e) {
-  echo json_encode(["success" => false, "message" => "Server error.", "error" => $e->getMessage()]);
+  echo json_encode([
+    "success" => false,
+    "message" => "Server error.",
+    "error"   => $e->getMessage(),
+    "file"    => $e->getFile(),
+    "line"    => $e->getLine(),
+    "trace"   => $e->getTraceAsString(),
+    "mysql_errno" => isset($conn) ? $conn->errno : null,
+    "mysql_error" => isset($conn) ? $conn->error : null,
+  ]);
   exit;
 }
 ?>

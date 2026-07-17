@@ -64,7 +64,7 @@ function sendRequestNotification($conn, $department, $subject, $details)
             <br>
 
             <p>Please login to the STLAF Leave Management System to review the request.</p>
-            
+
             <br>
             <p> https://stlaf-leave.vercel.app/ </p>
 
