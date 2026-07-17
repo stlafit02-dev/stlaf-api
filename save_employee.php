@@ -19,6 +19,7 @@ $id   = $data['id'] ?? null;
 
 $idNumber   = trim((string)($data['username'] ?? $data['id_number'] ?? '')); 
 $name       = trim((string)($data['name'] ?? ''));
+$email      = trim((string)($data['email'] ?? ''));
 $department = trim((string)($data['department'] ?? ''));
 $position   = trim((string)($data['position'] ?? ''));
 $password   = (string)($data['password'] ?? '');
@@ -73,6 +74,7 @@ try {
         SET id_number = ?,
             username  = ?,
             name      = ?,
+            email     = ?,
             department= ?,
             position  = ?,
             password  = ?,
@@ -83,13 +85,14 @@ try {
         echo json_encode(["success" => false, "message" => "Prepare failed", "mysql_error" => $conn->error]);
         exit;
       }
-      $stmt->bind_param("sssssssi", $idNumber, $idNumber, $name, $department, $position, $hash, $role, $id);
+      $stmt->bind_param("ssssssssi", $idNumber, $idNumber, $name, $email, $department, $position, $hash, $role, $id);
     } else {
       $stmt = $conn->prepare("
         UPDATE users
         SET id_number = ?,
             username  = ?,
             name      = ?,
+            email     = ?,
             department= ?,
             position  = ?,
             role      = ?
@@ -99,7 +102,7 @@ try {
         echo json_encode(["success" => false, "message" => "Prepare failed", "mysql_error" => $conn->error]);
         exit;
       }
-      $stmt->bind_param("ssssssi", $idNumber, $idNumber, $name, $department, $position, $role, $id);
+      $stmt->bind_param("sssssssi", $idNumber, $idNumber, $name, $email, $department, $position, $role, $id);
     }
 
     if ($stmt->execute()) {
@@ -131,8 +134,8 @@ try {
 
   // Insert user
   $stmt = $conn->prepare("
-    INSERT INTO users (id_number, username, name, department, position, password, role)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO users (id_number, username, name, email, department, position, password, role)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   ");
   if (!$stmt) {
     echo json_encode(["success" => false, "message" => "Prepare failed", "mysql_error" => $conn->error]);
@@ -140,7 +143,7 @@ try {
   }
 
   // username mirrors id_number to keep your login flexible
-  $stmt->bind_param("sssssss", $idNumber, $idNumber, $name, $department, $position, $hash, $role);
+  $stmt->bind_param("ssssssss", $idNumber, $idNumber, $name, $email, $department, $position, $hash, $role);
 
   if ($stmt->execute()) {
     echo json_encode(["success" => true, "message" => "Employee added successfully!"]);
@@ -151,16 +154,7 @@ try {
   exit;
 
 } catch (Throwable $e) {
-  echo json_encode([
-    "success" => false,
-    "message" => "Server error.",
-    "error"   => $e->getMessage(),
-    "file"    => $e->getFile(),
-    "line"    => $e->getLine(),
-    "trace"   => $e->getTraceAsString(),
-    "mysql_errno" => isset($conn) ? $conn->errno : null,
-    "mysql_error" => isset($conn) ? $conn->error : null,
-  ]);
+  echo json_encode(["success" => false, "message" => "Server error.", "error" => $e->getMessage()]);
   exit;
 }
 ?>
